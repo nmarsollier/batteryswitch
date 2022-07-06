@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Battery Switch</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="app_widget_description">This is an app widget description</string>
+    <string name="settings_title">Settings</string>
+    <string name="server_name">Server Name :</string>
+    <string name="try_on">Try On</string>
+    <string name="try_off">Try Off</string>
+    <string name="close">Close</string>
+</resources>
