@@ -1,5 +1,6 @@
 package com.nmarsollier.batteryswitch
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -9,7 +10,6 @@ import android.content.Context
 import android.content.Context.BATTERY_SERVICE
 import android.content.Intent
 import android.os.BatteryManager
-import android.os.PowerManager
 import android.view.View
 import android.widget.RemoteViews
 import com.nmarsollier.batteryswitch.api.TasmotaApi
@@ -18,7 +18,6 @@ import com.nmarsollier.batteryswitch.tools.detachedLaunch
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
-
 
 private const val OPEN_SETTINGS = "OPEN_SETTINGS"
 const val MAX_BATTERY = 90
@@ -51,10 +50,6 @@ class BatterySwitch : AppWidgetProvider() {
     override fun onReceive(context: Context?, intent: Intent) {
         super.onReceive(context, intent)
         context ?: return
-
-        (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
-            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "com:nmarsollier:batteryswitch")
-            .acquire(30 * 1000L)
 
         logger.info("onReceive called ${Date()}")
         updateAllWidgets(context)
@@ -95,33 +90,22 @@ class BatterySwitch : AppWidgetProvider() {
 
             try {
                 val bm = context.getSystemService(BATTERY_SERVICE) as BatteryManager
-                val percent = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+                val percent = bm.batteryPercent
+                val charging = bm.charging
+                updateChargerStatus(context, percent, charging)
 
-                val charging =
-                    bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING
-
-                logger.info(
-                    "companion refreshing ${percent}% Charging: $charging"
-                )
+                logger.info("companion refreshing ${percent}% Charging: $charging")
 
                 val widgetManager = AppWidgetManager.getInstance(context)
                 val widgetComponent = ComponentName(context, BatterySwitch::class.java)
                 val widgetIds = widgetManager.getAppWidgetIds(widgetComponent)
-
-                updateChargerStatus(context, percent, charging)
 
                 logger.info(
                     "companion refreshing widgets ${widgetIds.joinToString(", ")}"
                 )
 
                 widgetIds.forEach { appWidgetId ->
-                    updateWidget(
-                        context,
-                        widgetManager,
-                        appWidgetId,
-                        percent,
-                        charging
-                    )
+                    updateWidget(context, widgetManager, appWidgetId, percent, charging)
                 }
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "companion refreshing error", e)
@@ -133,10 +117,7 @@ class BatterySwitch : AppWidgetProvider() {
             level: Int,
             charging: Boolean
         ) {
-
-            logger.info(
-                "updating charger"
-            )
+            logger.info("updating charger")
 
             detachedLaunch {
                 when {
@@ -209,11 +190,7 @@ class BatterySwitch : AppWidgetProvider() {
         // ALARM SERVICE
         private const val INTERVAL = 5 * 60 * 1000L
 
-        val Context.widgetIntent
-            get() = Intent(this, BatterySwitch::class.java).also {
-                it.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            }
-
+        @SuppressLint("UnspecifiedImmutableFlag")
         private fun startScheduler(context: Context) {
             logger.info("start alarm service called ${Date()}")
 
@@ -236,6 +213,7 @@ class BatterySwitch : AppWidgetProvider() {
             logger.info("start alarm service executed ${Date()}")
         }
 
+        @SuppressLint("UnspecifiedImmutableFlag")
         private fun stopScheduler(context: Context) {
             logger.info("stop alarm service called ${Date()}")
 
@@ -251,6 +229,7 @@ class BatterySwitch : AppWidgetProvider() {
             logger.info("stop alarm service executed ${Date()}")
         }
 
+        @SuppressLint("UnspecifiedImmutableFlag")
         private fun isAlarmSet(context: Context): Boolean {
             val alarmUp = PendingIntent.getBroadcast(
                 context, 1001,
@@ -264,3 +243,13 @@ class BatterySwitch : AppWidgetProvider() {
     }
 }
 
+private val BatteryManager.batteryPercent
+    get() = getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+
+private val BatteryManager.charging
+    get() = getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING
+
+private val Context.widgetIntent
+    get() = Intent(this, BatterySwitch::class.java).also {
+        it.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+    }
