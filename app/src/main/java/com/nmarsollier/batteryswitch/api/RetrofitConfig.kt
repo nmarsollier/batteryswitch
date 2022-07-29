@@ -6,11 +6,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.logging.Logger
 
+private val logger: Logger = Logger.getLogger("OkHttp")
+
 class RetrofitConfig(
     serverName: String
 ) {
-    private val logger: Logger = Logger.getLogger("OkHttp")
-
     private val client = OkHttpClient.Builder()
         .addInterceptor(HttpLoggingInterceptor { message: String? ->
             logger.info(

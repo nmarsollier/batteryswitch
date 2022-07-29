@@ -40,38 +40,81 @@
             android:layout_alignParentEnd="true"
             android:layout_toEndOf="@id/server_name_label" />
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@id/close"
-            android:layout_centerHorizontal="true"
-            android:orientation="horizontal">
+            android:layout_above="@+id/buttons"
+            android:layout_below="@+id/server_name"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true">
+
+            <TextView
+                android:id="@+id/logs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </ScrollView>
+
+        <RelativeLayout
+            android:id="@+id/buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/buttons2"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true">
 
             <Button
                 android:id="@+id/try_on"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_toLeftOf="@id/separator1"
                 android:text="@string/try_on"
                 android:textAllCaps="false" />
+
+            <View
+                android:id="@+id/separator1"
+                android:layout_width="20dp"
+                android:layout_height="1dp"
+                android:layout_centerHorizontal="true" />
 
             <Button
                 android:id="@+id/try_off"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_toRightOf="@id/separator1"
                 android:text="@string/try_off"
                 android:textAllCaps="false" />
-        </LinearLayout>
+        </RelativeLayout>
 
-
-        <Button
-            android:id="@+id/close"
+        <RelativeLayout
+            android:id="@+id/buttons2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:text="@string/close"
-            android:textAllCaps="false" />
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true">
+
+            <Button
+                android:id="@+id/clear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@id/separator2"
+                android:text="@string/clear_logs"
+                android:textAllCaps="false" />
+
+            <View
+                android:id="@+id/separator2"
+                android:layout_width="20dp"
+                android:layout_height="1dp"
+                android:layout_centerHorizontal="true" />
+
+            <Button
+                android:id="@+id/close"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/separator2"
+                android:text="@string/close"
+                android:textAllCaps="false" />
+
+        </RelativeLayout>
     </RelativeLayout>
 </ScrollView>

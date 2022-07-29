@@ -2,15 +2,14 @@ package com.nmarsollier.batteryswitch.settings
 
 import android.content.Context
 import java.io.FileInputStream
-import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class SettingsProperties(context: Context) {
-    private val logger: Logger = Logger.getLogger("SettingsProperties")
+private val logger: Logger = Logger.getLogger("SettingsProperties")
 
+class SettingsProperties(context: Context) {
     private val fileName = "${context.filesDir}/settings.properties"
 
     var serverName: String = "192.168.0.228"
@@ -21,7 +20,9 @@ class SettingsProperties(context: Context) {
                 Properties().apply { load(it) }
             }
             serverName = props.getProperty("serverName", serverName)
-        } catch (e: FileNotFoundException) {
+        } catch (err: Error) {
+            logger.log(Level.SEVERE, " init ", e)
+        } catch (e: Exception) {
             logger.log(Level.SEVERE, " init ", e)
         }
     }
@@ -34,7 +35,7 @@ class SettingsProperties(context: Context) {
         FileOutputStream(fileName).use {
             props.store(it, "")
         }
-    } catch (e: FileNotFoundException) {
+    } catch (e: Exception) {
         logger.log(Level.SEVERE, " save ", e)
     }
 }

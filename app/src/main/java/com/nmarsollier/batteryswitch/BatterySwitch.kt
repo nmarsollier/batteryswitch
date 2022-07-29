@@ -10,11 +10,13 @@ import android.content.Context
 import android.content.Context.BATTERY_SERVICE
 import android.content.Intent
 import android.os.BatteryManager
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.RemoteViews
-import com.nmarsollier.batteryswitch.api.TasmotaApi
+import com.nmarsollier.batteryswitch.api.DebouncedTasmota
 import com.nmarsollier.batteryswitch.settings.SettingsActivity
-import com.nmarsollier.batteryswitch.tools.detachedLaunch
+import com.nmarsollier.batteryswitch.tools.appendToLogFile
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -22,6 +24,8 @@ import java.util.logging.Logger
 private const val OPEN_SETTINGS = "OPEN_SETTINGS"
 const val MAX_BATTERY = 90
 const val MIN_BATTERY = 20
+
+private val logger: Logger = Logger.getLogger("BatterySwitch")
 
 class BatterySwitch : AppWidgetProvider() {
     override fun onEnabled(context: Context?) {
@@ -51,6 +55,8 @@ class BatterySwitch : AppWidgetProvider() {
         super.onReceive(context, intent)
         context ?: return
 
+        startScheduler(context)
+
         logger.info("onReceive called ${Date()}")
         updateAllWidgets(context)
 
@@ -58,9 +64,6 @@ class BatterySwitch : AppWidgetProvider() {
             logger.info("onReceive open settings")
             openSettingsScreen(context)
         }
-
-        logger.info("onReceive refresh")
-        updateAllWidgets(context)
     }
 
     private fun openSettingsScreen(context: Context) {
@@ -76,8 +79,6 @@ class BatterySwitch : AppWidgetProvider() {
     }
 
     companion object {
-        private val logger: Logger = Logger.getLogger("BatterySwitch")
-
         /**
          * Update all widgets on screen
          */
@@ -92,7 +93,7 @@ class BatterySwitch : AppWidgetProvider() {
                 val bm = context.getSystemService(BATTERY_SERVICE) as BatteryManager
                 val percent = bm.batteryPercent
                 val charging = bm.charging
-                updateChargerStatus(context, percent, charging)
+                DebouncedTasmota.updateChargerStatus(context, percent, charging)
 
                 logger.info("companion refreshing ${percent}% Charging: $charging")
 
@@ -112,27 +113,6 @@ class BatterySwitch : AppWidgetProvider() {
             }
         }
 
-        private fun updateChargerStatus(
-            context: Context,
-            level: Int,
-            charging: Boolean
-        ) {
-            logger.info("updating charger")
-
-            detachedLaunch {
-                when {
-                    charging && level >= MAX_BATTERY -> {
-                        TasmotaApi(context).switchOff()
-                        updateAllWidgets(context)
-                    }
-                    !charging && level <= MIN_BATTERY -> {
-                        TasmotaApi(context).switchOn()
-                        updateAllWidgets(context)
-                    }
-                }
-            }
-        }
-
         /**
          * Update one widget
          */
@@ -142,7 +122,7 @@ class BatterySwitch : AppWidgetProvider() {
             appWidgetId: Int,
             percent: Int,
             charging: Boolean
-        ) {
+        ) = Handler(Looper.getMainLooper()).post {
             val views = RemoteViews(context.packageName, R.layout.battery_switch)
             views.setTextViewText(R.id.percent, "${percent}%")
 
@@ -210,6 +190,7 @@ class BatterySwitch : AppWidgetProvider() {
                 pendingIntent
             )
 
+            appendToLogFile("scheduler started")
             logger.info("start alarm service executed ${Date()}")
         }
 
@@ -226,6 +207,7 @@ class BatterySwitch : AppWidgetProvider() {
 
             (context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager)?.cancel(pendingIntent)
             pendingIntent.cancel()
+            appendToLogFile("scheduler stopped")
             logger.info("stop alarm service executed ${Date()}")
         }
 

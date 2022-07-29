@@ -8,4 +8,5 @@
     <string name="try_on">Try On</string>
     <string name="try_off">Try Off</string>
     <string name="close">Close</string>
+    <string name="clear_logs">Clear Logs</string>
 </resources>
