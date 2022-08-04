@@ -21,7 +21,7 @@ class SettingsProperties(context: Context) {
             }
             serverName = props.getProperty("serverName", serverName)
         } catch (err: Error) {
-            logger.log(Level.SEVERE, " init ", e)
+            logger.log(Level.SEVERE, " init ", err)
         } catch (e: Exception) {
             logger.log(Level.SEVERE, " init ", e)
         }
